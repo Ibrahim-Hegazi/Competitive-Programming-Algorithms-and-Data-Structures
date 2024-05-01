@@ -1,0 +1,147 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define ll long long
+#define fast ios::sync_with_stdio(0);cin.tie(0);cout.tie(0);
+
+struct Node { //segment tree for adding
+
+    //Changes can happen here based on the question , extra variable migth be added based on the question  *********************************************************************************************
+    ll mn;
+
+    //Changes can happen here based on the question*********************************************************************************************
+    //Neutral Node Constructor 
+    Node() {
+        mn = 1e15;//No value added in this node(this is for empty nodes that gonna compelte our segment tree), also the value of this sum here might change based on the problem (Min,Max,GCD,OR,AND,etc)
+    }
+
+
+    Node(ll x) {
+        mn = x;
+    }
+
+    //Changes can happen here based on the question based on set or change**********************************************************************
+    void change(ll x) { //Used for the Update queries
+        mn = x; //The + sign will be changed based on the problem
+    }
+
+};
+
+
+
+struct SegTree {
+    ll Tree_Size;
+    vector<Node>SegData;
+
+    SegTree(ll n) { // n == size of the tree
+        Tree_Size = 1;
+        while (Tree_Size < n)
+            Tree_Size *= 2;
+        //Tree_Size--;
+        SegData.assign(2 * Tree_Size, Node());
+    }
+
+    //Changes can happen here based on the question****************************************************************************************************
+    Node merge(Node& le, Node& ri) { //Take in two node the left and the right and give us it parent
+        Node ans = Node();
+        ans.mn = min(le.mn, ri.mn);
+        return ans;
+    }
+
+
+    void set(ll idx, ll val, ll ni, ll lx, ll rx) {// 0 Indexed and r is not included
+            // idx id the targeted index but to reach it we will have to go from the top of the tree to the needed index idx using the recursive calls
+            //ni == number of the node that we are currently at (CURRENT NODE)
+            //lx == the left of the interval that this node covers
+            //rx == the right of the intercal that this node covers
+
+        if (rx - lx == 1) {//We have reached a leaf node
+            //Certain Operation Happens here then return
+            SegData[ni].change(val);
+            return;
+        }
+
+        ll mid = (lx + rx) / 2;
+
+        if (idx < mid) {
+            set(idx, val, 2 * ni + 1, lx, mid);
+        }
+        else {
+            set(idx, val, 2 * ni + 2, mid, rx);
+        }
+
+
+        //Here we go from top to bottom ,So when i am returning from my children i will need to change the parent value
+        SegData[ni] = merge(SegData[2 * ni + 1], SegData[2 * ni + 2]);
+    }
+
+
+    void set(ll idx, ll val) { // 0 Indexed and r is not included
+        //For simplier calling with less data
+        set(idx, val, 0, 0, Tree_Size);
+    }
+    //Both of the set functions can be used based on the question
+
+
+    Node get(ll l, ll r, ll ni, ll lx, ll rx) { // 0 Indexed and r is not included
+
+        if (lx >= l && rx <= r) {//We need this node
+            return SegData[ni];
+        }
+        if (lx >= r || rx <= l) {//Out of bounds then  return something invalid , which is the neutral node
+            return Node();
+        }
+
+        ll mid = (rx + lx) / 2;
+        Node lf = get(l, r, 2 * ni + 1, lx, mid);
+        Node ri = get(l, r, 2 * ni + 2, mid, rx);
+
+        return merge(lf, ri);
+
+    }
+
+    ll get(ll l, ll r) {// 0 Indexed and r is not included
+        //For simplier calling with less data
+        return get(l, r, 0, 0, Tree_Size).mn;
+    }
+};
+
+
+
+void solve() {
+    ll n, m; cin >> n >> m;
+    SegTree st(n);
+    
+    for (int i = 0; i < n; i++)
+    {
+        ll temp; cin >> temp;
+        st.set(i, temp);
+    }
+
+    while (m--) {
+        ll op; cin >> op;
+        if (op == 1) {
+            ll idx, val; cin >> idx >> val;
+            st.set(idx, val);
+        }
+        else {
+            ll l, r; cin >> l >> r;
+            cout << st.get(l, r)<<"\n";
+        }
+    }
+}
+
+
+int main() {
+
+    /*freopen("input.txt", "r", stdin);
+    freopen("output.txt", "w", stdout);*/
+    fast;
+
+    ll t{ 1 }; //cin >> t;
+    while (t--) {
+
+        solve();
+    }
+    return 0;
+
+}
